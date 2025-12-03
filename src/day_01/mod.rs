@@ -1,6 +1,6 @@
 use std::fs;
 
-pub fn run(is_test: bool) {
+pub fn run(part: u8, is_test: bool) {
     let input_file = if is_test {
         "test_input.txt"
     } else {
@@ -24,10 +24,19 @@ pub fn run(is_test: bool) {
         })
         .collect();
 
-    println!("Solution: {}", solve(rotations));
+    let result = match part {
+        1 => part1(rotations.clone()),
+        2 => part2(rotations.clone()),
+        _ => {
+            println!("Part {} not implemented for day 1", part);
+            return;
+        }
+    };
+
+    println!("Day 1 Part {}: {}", part, result);
 }
 
-fn solve(rotations: Vec<i32>) -> i32 {
+fn part1(rotations: Vec<i32>) -> i32 {
     let starts_at: i32 = 50;
 
     let mut count: i32 = 0;
@@ -44,6 +53,12 @@ fn solve(rotations: Vec<i32>) -> i32 {
     count
 }
 
+fn part2(_rotations: Vec<i32>) -> i32 {
+    // TODO: Implement part 2
+    println!("Part 2 not yet implemented");
+    0
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -51,12 +66,12 @@ mod tests {
     #[test]
     fn test_simple() {
         let rotations = vec![1, 5, -56];
-        assert_eq!(solve(rotations), 1);
+        assert_eq!(part1(rotations), 1);
     }
 
     #[test]
     fn test_example() {
         let rotations = vec![-68, -30, 48, -5, 60, -55, -1, -99, 14, -82];
-        assert_eq!(solve(rotations), 3);
+        assert_eq!(part1(rotations), 3);
     }
 }

@@ -26,7 +26,6 @@ pub fn run(part: u8, is_test: bool) {
 
     let result = match part {
         1 => part1(rotations.clone()),
-        2 => part2(rotations.clone()),
         _ => {
             println!("Part {} not implemented for day 1", part);
             return;
@@ -51,12 +50,6 @@ fn part1(rotations: Vec<i32>) -> i32 {
         });
 
     count
-}
-
-fn part2(_rotations: Vec<i32>) -> i32 {
-    // TODO: Implement part 2
-    println!("Part 2 not yet implemented");
-    0
 }
 
 #[cfg(test)]

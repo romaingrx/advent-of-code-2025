@@ -33,16 +33,16 @@ pub fn run(part: u8, is_test: bool) {
 }
 
 fn is_repeating_twice(number: u64) -> bool {
-    let string = String::from(format!("{}", number));
+    let string = number.to_string();
     if string.len().rem_euclid(2) != 0 {
         return false;
     }
     let (left, right) = string.split_at(string.len() / 2);
-    return left == right;
+    left == right
 }
 
 fn is_repeating(number: u64) -> bool {
-    let string = String::from(format!("{}", number));
+    let string = number.to_string();
     for len in 1..string.len() {
         if string.len().rem_euclid(len) == 0 {
             let first_part = &string[..len];
@@ -55,31 +55,23 @@ fn is_repeating(number: u64) -> bool {
             }
         }
     }
-    return false;
+    false
 }
 
-fn part1(ranges: &Vec<(u64, u64)>) -> u64 {
-    let mut count = 0;
-    for (start, end) in ranges {
-        for number in *start..(*end + 1) {
-            if is_repeating_twice(number) {
-                count += number;
-            }
-        }
-    }
-    count
+fn part1(ranges: &[(u64, u64)]) -> u64 {
+    ranges
+        .iter()
+        .flat_map(|&(start, end)| start..=end)
+        .filter(|&n| is_repeating_twice(n))
+        .sum()
 }
 
-fn part2(ranges: &Vec<(u64, u64)>) -> u64 {
-    let mut count = 0;
-    for (start, end) in ranges {
-        for number in *start..(*end + 1) {
-            if is_repeating(number) {
-                count += number;
-            }
-        }
-    }
-    count
+fn part2(ranges: &[(u64, u64)]) -> u64 {
+    ranges
+        .iter()
+        .flat_map(|&(start, end)| start..=end)
+        .filter(|&n| is_repeating(n))
+        .sum()
 }
 
 #[cfg(test)]

@@ -13,6 +13,13 @@ DAY=$1
 DAY_DIR="src/day_$(printf "%02d" $DAY)"
 MOD_NAME="day_$(printf "%02d" $DAY)"
 
+# Check for staging changes
+if ! git diff-index --quiet HEAD --; then
+    echo "Error: You have uncommitted changes. Please commit or stash them before creating a new day."
+    git status --short
+    exit 1
+fi
+
 # Create directory
 mkdir -p "$DAY_DIR"
 

@@ -14,6 +14,7 @@ pub fn run(part: u8, is_test: bool) {
 
     let result = match part {
         1 => part1(&banks),
+        2 => part2(&banks),
         _ => {
             println!("Part {} not implemented for day 3", part);
             return;
@@ -24,27 +25,38 @@ pub fn run(part: u8, is_test: bool) {
 }
 
 fn part1(banks: &[&str]) -> u64 {
+    get_max_joltage(banks, 2)
+}
+
+fn part2(banks: &[&str]) -> u64 {
+    get_max_joltage(banks, 12)
+}
+
+fn get_max_joltage(banks: &[&str], n_batteries: usize) -> u64 {
     banks
         .iter()
         .enumerate()
         .map(|(bank_idx, bank)| {
-            let (first_max_idx, first_max_char) = bank
-                .chars()
-                .take(bank.chars().count() - 1)
-                .enumerate()
-                .max_by(|(_, a), (_, b)| a.cmp(b).then(Ordering::Greater))
-                .unwrap();
+            let mut current_idx = 0;
+            let mut batteries = "".to_owned();
 
-            let (_, second_max_char) = bank
-                .chars()
-                .skip(first_max_idx + 1)
-                .enumerate()
-                .max_by(|(_, a), (_, b)| a.cmp(b).then(Ordering::Greater))
-                .unwrap();
-            println!("[bank {bank_idx}]: {first_max_char}{second_max_char}");
-            format!("{}{}", first_max_char, second_max_char)
-                .parse::<u64>()
-                .unwrap()
+            for _ in 0..n_batteries {
+                let n_take = bank.len() + batteries.len() + 1 - n_batteries - current_idx;
+                let (max_idx, max_char) = bank
+                    .chars()
+                    .skip(current_idx)
+                    .take(n_take)
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.cmp(b).then(Ordering::Greater))
+                    .unwrap();
+
+                current_idx += max_idx + 1;
+                batteries.push(max_char);
+            }
+
+            println!("[bank {bank_idx}]: {batteries}");
+
+            batteries.parse::<u64>().unwrap()
         })
         .sum()
 }
@@ -68,5 +80,22 @@ mod tests {
     fn test_tricky() {
         let input = vec!["91111111191"];
         assert_eq!(part1(&input), 99);
+    }
+
+    #[test]
+    fn test_simple() {
+        let input = vec!["911118"];
+        assert_eq!(get_max_joltage(&input, 3), 918);
+    }
+
+    #[test]
+    fn test_part_2() {
+        let input = vec![
+            "987654321111111",
+            "811111111111119",
+            "234234234234278",
+            "818181911112111",
+        ];
+        assert_eq!(part2(&input), 3121910778619);
     }
 }

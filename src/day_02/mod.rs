@@ -1,11 +1,7 @@
 use std::fs;
 
 pub fn run(part: u8, is_test: bool) {
-    let input_file = if is_test {
-        "test_input.txt"
-    } else {
-        "input.txt"
-    };
+    let input_file = if is_test { "test_input.txt" } else { "input.txt" };
     let input = fs::read_to_string(format!("src/day_02/{}", input_file))
         .expect("Failed to read input file");
 
@@ -26,7 +22,7 @@ pub fn run(part: u8, is_test: bool) {
         _ => {
             println!("Part {} not implemented for day 2", part);
             return;
-        }
+        },
     };
 
     println!("Day 2 Part {}: {}", part, result);
@@ -46,10 +42,8 @@ fn is_repeating(number: u64) -> bool {
     for len in 1..string.len() {
         if string.len().rem_euclid(len) == 0 {
             let first_part = &string[..len];
-            let all_equal = string
-                .as_bytes()
-                .chunks(len)
-                .all(|chunk| chunk == first_part.as_bytes());
+            let all_equal =
+                string.as_bytes().chunks(len).all(|chunk| chunk == first_part.as_bytes());
             if all_equal {
                 return true;
             }
@@ -59,19 +53,11 @@ fn is_repeating(number: u64) -> bool {
 }
 
 fn part1(ranges: &[(u64, u64)]) -> u64 {
-    ranges
-        .iter()
-        .flat_map(|&(start, end)| start..=end)
-        .filter(|&n| is_repeating_twice(n))
-        .sum()
+    ranges.iter().flat_map(|&(start, end)| start..=end).filter(|&n| is_repeating_twice(n)).sum()
 }
 
 fn part2(ranges: &[(u64, u64)]) -> u64 {
-    ranges
-        .iter()
-        .flat_map(|&(start, end)| start..=end)
-        .filter(|&n| is_repeating(n))
-        .sum()
+    ranges.iter().flat_map(|&(start, end)| start..=end).filter(|&n| is_repeating(n)).sum()
 }
 
 #[cfg(test)]
@@ -126,12 +112,10 @@ mod tests {
             (824824821, 824824827, 824824824),
             (2121212118, 2121212124, 2121212121),
         ];
-        let ranges: Vec<(u64, u64)> = ranges_extended
-            .iter()
-            .map(|(start, end, _)| (*start, *end))
-            .collect();
+        let ranges: Vec<(u64, u64)> =
+            ranges_extended.iter().map(|(start, end, _)| (*start, *end)).collect();
         for (start, end, total) in ranges_extended {
-            assert_eq!(part2(&vec![(start, end)]), total);
+            assert_eq!(part2(&[(start, end)]), total);
         }
         assert_eq!(part2(&ranges), 4174379265);
     }

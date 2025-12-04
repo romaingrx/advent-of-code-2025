@@ -1,17 +1,12 @@
 use std::fs;
 
 pub fn run(part: u8, is_test: bool) {
-    let input_file = if is_test {
-        "test_input.txt"
-    } else {
-        "input.txt"
-    };
+    let input_file = if is_test { "test_input.txt" } else { "input.txt" };
     let input = fs::read_to_string(format!("src/day_01/{}", input_file))
         .expect("Failed to read input file");
 
     let rotations: Vec<i32> = input
         .lines()
-        .into_iter()
         .map(|line| {
             let (rotation_str, number_str) = line.split_at(1);
             let rotation = rotation_str.chars().next().expect("Invalid rotation");
@@ -29,7 +24,7 @@ pub fn run(part: u8, is_test: bool) {
         _ => {
             println!("Part {} not implemented for day 1", part);
             return;
-        }
+        },
     };
 
     println!("Day 1 Part {}: {}", part, result);
@@ -39,15 +34,13 @@ fn part1(rotations: Vec<i32>) -> i32 {
     let starts_at: i32 = 50;
 
     let mut count: i32 = 0;
-    std::iter::once(starts_at)
-        .chain(rotations.into_iter())
-        .reduce(|a, b| {
-            let result = (a + b).rem_euclid(100);
-            if result == 0 {
-                count += 1;
-            }
-            result
-        });
+    std::iter::once(starts_at).chain(rotations).reduce(|a, b| {
+        let result = (a + b).rem_euclid(100);
+        if result == 0 {
+            count += 1;
+        }
+        result
+    });
 
     count
 }

@@ -14,7 +14,7 @@ pub fn run(part: u8, is_test: bool) {
         _ => {
             println!("Part {} not implemented for day 4", part);
             return;
-        }
+        },
     };
 
     println!("Day 4 Part {}: {}", part, result);

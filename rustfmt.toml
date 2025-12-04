@@ -1,0 +1,24 @@
+# Edition
+edition = "2024"
+
+# Strict width limits
+max_width = 100
+use_small_heuristics = "Max"
+
+# Imports
+reorder_imports = true
+reorder_modules = true
+
+# Modern Rust style
+use_field_init_shorthand = true
+use_try_shorthand = true
+
+# Consistent trailing elements
+match_block_trailing_comma = true
+
+# Force explicit patterns
+force_explicit_abi = true
+
+# Clean up
+remove_nested_parens = true
+merge_derives = true

@@ -1,11 +1,7 @@
 use std::{cmp::Ordering, fs};
 
 pub fn run(part: u8, is_test: bool) {
-    let input_file = if is_test {
-        "test_input.txt"
-    } else {
-        "input.txt"
-    };
+    let input_file = if is_test { "test_input.txt" } else { "input.txt" };
     let input = fs::read_to_string(format!("src/day_03/{}", input_file))
         .expect("Failed to read input file");
 
@@ -18,7 +14,7 @@ pub fn run(part: u8, is_test: bool) {
         _ => {
             println!("Part {} not implemented for day 3", part);
             return;
-        }
+        },
     };
 
     println!("Day 3 Part {}: {}", part, result);
@@ -67,12 +63,8 @@ mod tests {
 
     #[test]
     fn test_example() {
-        let input = vec![
-            "987654321111111",
-            "811111111111119",
-            "234234234234278",
-            "818181911112111",
-        ];
+        let input =
+            vec!["987654321111111", "811111111111119", "234234234234278", "818181911112111"];
         assert_eq!(part1(&input), 357);
     }
 
@@ -90,12 +82,8 @@ mod tests {
 
     #[test]
     fn test_part_2() {
-        let input = vec![
-            "987654321111111",
-            "811111111111119",
-            "234234234234278",
-            "818181911112111",
-        ];
+        let input =
+            vec!["987654321111111", "811111111111119", "234234234234278", "818181911112111"];
         assert_eq!(part2(&input), 3121910778619);
     }
 }

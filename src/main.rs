@@ -21,10 +21,7 @@ fn main() {
     // Parse day and part (default to part 1)
     let (day, part) = if day_arg.contains('.') {
         let parts: Vec<&str> = day_arg.split('.').collect();
-        (
-            parts[0],
-            parts.get(1).and_then(|p| p.parse::<u8>().ok()).unwrap_or(1),
-        )
+        (parts[0], parts.get(1).and_then(|p| p.parse::<u8>().ok()).unwrap_or(1))
     } else {
         (day_arg.as_str(), 1)
     };

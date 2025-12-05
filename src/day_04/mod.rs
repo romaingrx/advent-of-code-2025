@@ -1,5 +1,8 @@
 use std::fs;
 
+const NEIGHBORS: [(isize, isize); 8] =
+    [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
+
 pub fn run(part: u8, is_test: bool) {
     let input_file = if is_test { "test_input.txt" } else { "input.txt" };
     let input = fs::read_to_string(format!("src/day_04/{}", input_file))
@@ -25,35 +28,21 @@ fn part1(rows: &[Vec<char>]) -> usize {
     rolls.len()
 }
 fn find_rolls_to_remove(rows: &[Vec<char>]) -> Vec<(usize, usize)> {
-    let height = rows.len() as i32;
-    let width = rows[0].len() as i32;
+    let height = rows.len() as isize;
+    let width = rows[0].len() as isize;
     let mut rolls: Vec<(usize, usize)> = vec![];
     for (i, row) in rows.iter().enumerate() {
-        for (j, c) in row.iter().enumerate() {
-            if *c != '@' {
-                continue;
-            }
-            let deltas = [
-                (-1i32, -1i32),
-                (-1i32, 0i32),
-                (-1i32, 1i32),
-                (0i32, -1i32),
-                (0i32, 1i32),
-                (1i32, -1i32),
-                (1i32, 0i32),
-                (1i32, 1i32),
-            ];
-            let n_adjacent_paper_rolls: i32 = deltas
+        for (j, _) in row.iter().enumerate().filter(|(_, c)| **c == '@') {
+            let n_adjacent_paper_rolls = NEIGHBORS
                 .iter()
-                .map(|(dx, dy)| {
-                    let x = (i as i32) + dx;
-                    let y = (j as i32) + dy;
-                    if x < 0 || y < 0 || x >= height || y >= width {
-                        return 0;
+                .filter(|(dr, dc)| {
+                    let (row, col) = (i as isize + dr, j as isize + dc);
+                    if (0..height).contains(&row) && (0..width).contains(&col) {
+                        return rows[row as usize][col as usize] == '@';
                     }
-                    (rows[x as usize][y as usize] == '@') as i32
+                    false
                 })
-                .sum();
+                .count();
             println!("[{},{}]: {}", i, j, n_adjacent_paper_rolls);
             if n_adjacent_paper_rolls < 4 {
                 rolls.push((i, j));

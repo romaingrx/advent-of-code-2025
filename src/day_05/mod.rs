@@ -1,7 +1,4 @@
-use std::{
-    cmp::{Ordering, max},
-    fs,
-};
+use std::fs;
 
 pub fn run(part: u8, is_test: bool) {
     let input_file = if is_test { "test_input.txt" } else { "input.txt" };
@@ -53,37 +50,18 @@ fn part1(fresh_ranges: &[(i64, i64)], items: Vec<i64>) -> i64 {
 }
 
 fn part2(fresh_ranges: &[(i64, i64)]) -> i64 {
-    let mut map = fresh_ranges.to_owned();
+    let mut ranges = fresh_ranges.to_vec();
+    ranges.sort_unstable();
 
-    map.sort_by(|(a0, a1), (b0, b1)| {
-        if a0 < b0 {
-            return Ordering::Less;
-        } else if a0 > b0 {
-            return Ordering::Greater;
+    let merged = ranges.into_iter().fold(Vec::<(i64, i64)>::new(), |mut acc, (start, end)| {
+        match acc.last_mut() {
+            Some(last) if start <= last.1 => last.1 = last.1.max(end),
+            _ => acc.push((start, end)),
         }
-        if a1 < b1 {
-            return Ordering::Less;
-        } else if a1 > b1 {
-            return Ordering::Greater;
-        }
-        Ordering::Equal
+        acc
     });
 
-    let mut sum = 0;
-    let mut current_start = -1;
-    let mut current_end = -2;
-
-    for (start, end) in map {
-        if start > current_end {
-            sum += current_end - current_start + 1;
-            current_start = start;
-            current_end = end;
-        } else {
-            current_end = max(current_end, end);
-        }
-    }
-
-    sum + current_end - current_start + 1
+    merged.iter().map(|(s, e)| e - s + 1).sum()
 }
 
 #[cfg(test)]

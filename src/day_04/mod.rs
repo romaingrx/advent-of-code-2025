@@ -10,7 +10,7 @@ pub fn run(part: u8, is_test: bool) {
 
     let result = match part {
         1 => part1(&rows),
-        2 => part2(&input),
+        2 => part2(&rows),
         _ => {
             println!("Part {} not implemented for day 4", part);
             return;
@@ -20,48 +20,63 @@ pub fn run(part: u8, is_test: bool) {
     println!("Day 4 Part {}: {}", part, result);
 }
 
-fn part1(rows: &[Vec<char>]) -> i32 {
+fn part1(rows: &[Vec<char>]) -> usize {
+    let rolls = find_rolls_to_remove(rows);
+    rolls.len()
+}
+fn find_rolls_to_remove(rows: &[Vec<char>]) -> Vec<(usize, usize)> {
     let height = rows.len() as i32;
     let width = rows[0].len() as i32;
-    rows.iter()
-        .enumerate()
-        .flat_map(|(i, row)| {
-            row.iter().enumerate().map(move |(j, _c)| {
-                if rows[i][j] != '@' {
-                    return 0;
-                }
-                let deltas = [
-                    (-1i32, -1i32),
-                    (-1i32, 0i32),
-                    (-1i32, 1i32),
-                    (0i32, -1i32),
-                    (0i32, 1i32),
-                    (1i32, -1i32),
-                    (1i32, 0i32),
-                    (1i32, 1i32),
-                ];
-                let n_adjacent_paper_rolls: i32 = deltas
-                    .iter()
-                    .map(|(dx, dy)| {
-                        let x = (i as i32) + dx;
-                        let y = (j as i32) + dy;
-                        if x < 0 || y < 0 || x >= height || y >= width {
-                            return 0;
-                        }
-                        (rows[x as usize][y as usize] == '@') as i32
-                    })
-                    .sum();
-                println!("[{},{}]: {}", i, j, n_adjacent_paper_rolls);
-                (n_adjacent_paper_rolls < 4) as i32
-            })
-        })
-        .sum()
+    let mut rolls: Vec<(usize, usize)> = vec![];
+    for (i, row) in rows.iter().enumerate() {
+        for (j, c) in row.iter().enumerate() {
+            if *c != '@' {
+                continue;
+            }
+            let deltas = [
+                (-1i32, -1i32),
+                (-1i32, 0i32),
+                (-1i32, 1i32),
+                (0i32, -1i32),
+                (0i32, 1i32),
+                (1i32, -1i32),
+                (1i32, 0i32),
+                (1i32, 1i32),
+            ];
+            let n_adjacent_paper_rolls: i32 = deltas
+                .iter()
+                .map(|(dx, dy)| {
+                    let x = (i as i32) + dx;
+                    let y = (j as i32) + dy;
+                    if x < 0 || y < 0 || x >= height || y >= width {
+                        return 0;
+                    }
+                    (rows[x as usize][y as usize] == '@') as i32
+                })
+                .sum();
+            println!("[{},{}]: {}", i, j, n_adjacent_paper_rolls);
+            if n_adjacent_paper_rolls < 4 {
+                rolls.push((i, j));
+            }
+        }
+    }
+    rolls
 }
 
-fn part2(_input: &str) -> i32 {
-    // TODO: Implement part 2
-    println!("Part 2 not yet implemented");
-    0
+fn part2(rows: &[Vec<char>]) -> usize {
+    let mut current_rows = rows.to_vec();
+    let mut current_number_of_rolls = 0;
+    loop {
+        let rolls = find_rolls_to_remove(&current_rows);
+        if rolls.is_empty() {
+            break;
+        }
+        current_number_of_rolls += rolls.len();
+        for (i, j) in rolls {
+            current_rows[i][j] = '*';
+        }
+    }
+    current_number_of_rolls
 }
 
 #[cfg(test)]

@@ -55,7 +55,7 @@ pub fn run(part: u8, is_test: bool) {
 
     let result = match part {
         1 => part1(&points, 1000),
-        2 => part2(&input),
+        2 => part2(&points),
         _ => {
             println!("Part {} not implemented for day 8", part);
             return;
@@ -65,7 +65,7 @@ pub fn run(part: u8, is_test: bool) {
     println!("Day 8 Part {}: {}", part, result);
 }
 
-fn part1(points: &[[i64; 3]], n_iterations: usize) -> usize {
+fn part1(points: &[[i64; 3]], n_iterations: usize) -> i64 {
     let mut pairs: Vec<(i64, usize, usize)> = (0..points.len())
         .flat_map(|i| {
             (i + 1..points.len()).map(move |j| {
@@ -83,45 +83,67 @@ fn part1(points: &[[i64; 3]], n_iterations: usize) -> usize {
     }
     let mut sizes = uf.component_sizes();
     sizes.sort_by(|a, b| b.cmp(a));
-    dbg!(&sizes);
     let answer: usize = sizes.iter().take(3).product();
-    answer
+    answer as i64
 }
 
-fn part2(_input: &str) -> usize {
-    // TODO: Implement part 2
-    println!("Part 2 not yet implemented");
-    0
+fn part2(points: &[[i64; 3]]) -> i64 {
+    let mut pairs: Vec<(i64, usize, usize, i64)> = (0..points.len())
+        .flat_map(|i| {
+            (i + 1..points.len()).map(move |j| {
+                let d: i64 = (0..3).map(|k| (points[i][k] - points[j][k]).pow(2)).sum();
+                let x_mul = points[i][0] * points[j][0];
+                (d, i, j, x_mul)
+            })
+        })
+        .collect();
+
+    pairs.sort_by_key(|p| p.0);
+
+    let mut uf = UnionFind::new(points.len());
+    for &(_, a, b, x_mul) in pairs.iter() {
+        uf.union(a, b);
+        if uf.component_sizes().len() == 1 {
+            return x_mul;
+        }
+    }
+
+    panic!("This should never happen");
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    const POINTS: [[i64; 3]; 20] = [
+        [162, 817, 812],
+        [57, 618, 57],
+        [906, 360, 560],
+        [592, 479, 940],
+        [352, 342, 300],
+        [466, 668, 158],
+        [542, 29, 236],
+        [431, 825, 988],
+        [739, 650, 466],
+        [52, 470, 668],
+        [216, 146, 977],
+        [819, 987, 18],
+        [117, 168, 530],
+        [805, 96, 715],
+        [346, 949, 466],
+        [970, 615, 88],
+        [941, 993, 340],
+        [862, 61, 35],
+        [984, 92, 344],
+        [425, 690, 689],
+    ];
 
     #[test]
     fn test_example_part_1() {
-        let points = vec![
-            [162, 817, 812],
-            [57, 618, 57],
-            [906, 360, 560],
-            [592, 479, 940],
-            [352, 342, 300],
-            [466, 668, 158],
-            [542, 29, 236],
-            [431, 825, 988],
-            [739, 650, 466],
-            [52, 470, 668],
-            [216, 146, 977],
-            [819, 987, 18],
-            [117, 168, 530],
-            [805, 96, 715],
-            [346, 949, 466],
-            [970, 615, 88],
-            [941, 993, 340],
-            [862, 61, 35],
-            [984, 92, 344],
-            [425, 690, 689],
-        ];
-        assert_eq!(part1(&points, 10), 40);
+        assert_eq!(part1(&POINTS, 10), 40);
+    }
+
+    #[test]
+    fn test_example_part_2() {
+        assert_eq!(part2(&POINTS), 25272);
     }
 }

@@ -1,7 +1,11 @@
+use indicatif::{ProgressBar, ProgressStyle};
 use std::{fs, ops::BitXor};
 
 use itertools::Itertools;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::Regex;
+
+const EPSILON: f64 = 1e-9;
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 struct BitMask(u64);
@@ -29,7 +33,7 @@ struct Puzzle {
     target_indicators: BitMask,
     buttons: Vec<BitMask>,
     #[allow(dead_code)]
-    joltages: Vec<i64>,
+    joltages: Vec<usize>,
 }
 
 fn parse_line(
@@ -101,10 +105,162 @@ fn part1(puzzles: &[Puzzle]) -> usize {
         .sum()
 }
 
-fn part2(_puzzles: &[Puzzle]) -> usize {
-    // TODO: Implement part 2
-    println!("Part 2 not yet implemented");
-    0
+struct Matrix {
+    data: Vec<Vec<f64>>,
+    rows: usize,
+    cols: usize,
+    dependent: Vec<usize>,   // Columns with pivots
+    independent: Vec<usize>, // Free variables
+}
+
+impl Matrix {
+    fn from_puzzle(puzzle: &Puzzle) -> Self {
+        let rows = puzzle.joltages.len();
+        let cols = puzzle.buttons.len();
+
+        // Build augmented matrix [A | b]
+        let mut data = vec![vec![0.0; cols + 1]; rows];
+        for (col, &mask) in puzzle.buttons.iter().enumerate() {
+            for (row, data_row) in data.iter_mut().enumerate().take(rows) {
+                if (mask.0 >> row) & 1 == 1 {
+                    data_row[col] = 1.0;
+                }
+            }
+        }
+        for (row, &val) in puzzle.joltages.iter().enumerate() {
+            data[row][cols] = val as f64;
+        }
+
+        let mut matrix =
+            Matrix { data, rows, cols, dependent: Vec::new(), independent: Vec::new() };
+
+        matrix.gaussian_elimination();
+        matrix
+    }
+
+    fn gaussian_elimination(&mut self) {
+        let mut pivot = 0;
+
+        for col in 0..self.cols {
+            // Find best pivot row (largest absolute value)
+            let best = (pivot..self.rows).max_by(|&a, &b| {
+                self.data[a][col].abs().partial_cmp(&self.data[b][col].abs()).unwrap()
+            });
+
+            let Some(best_row) = best else { continue };
+
+            // If best value is ~0, this column is a free variable
+            if self.data[best_row][col].abs() < EPSILON {
+                self.independent.push(col);
+                continue;
+            }
+
+            // Swap and mark as dependent
+            self.data.swap(pivot, best_row);
+            self.dependent.push(col);
+
+            // Normalize pivot row
+            let pivot_val = self.data[pivot][col];
+            for val in &mut self.data[pivot][col..=self.cols] {
+                *val /= pivot_val;
+            }
+
+            // Eliminate column in all other rows
+            for row in 0..self.rows {
+                if row != pivot {
+                    let factor = self.data[row][col];
+                    if factor.abs() > EPSILON {
+                        for c in col..=self.cols {
+                            self.data[row][c] -= factor * self.data[pivot][c];
+                        }
+                    }
+                }
+            }
+
+            pivot += 1;
+        }
+
+        // Remaining columns are free variables
+        self.independent.extend(pivot..self.cols);
+    }
+
+    // Check if independent variable assignment gives valid solution
+    fn valid(&self, free_vals: &[usize]) -> Option<usize> {
+        let mut total = free_vals.iter().sum::<usize>();
+
+        // Calculate each dependent variable
+        for (row, _) in self.dependent.iter().enumerate() {
+            let val = self.data[row][self.cols]
+                - self
+                    .independent
+                    .iter()
+                    .zip(free_vals)
+                    .map(|(&col, &v)| self.data[row][col] * v as f64)
+                    .sum::<f64>();
+
+            // Must be non-negative integer
+            if val < -EPSILON {
+                return None;
+            }
+            let rounded = val.round();
+            if (val - rounded).abs() > EPSILON {
+                return None;
+            }
+
+            total += rounded as usize;
+        }
+
+        Some(total)
+    }
+}
+
+fn search(matrix: &Matrix, idx: usize, vals: &mut [usize], best: &mut usize, max: usize) {
+    if idx == matrix.independent.len() {
+        if let Some(total) = matrix.valid(vals) {
+            *best = (*best).min(total);
+        }
+        return;
+    }
+
+    let current: usize = vals[..idx].iter().sum();
+    for v in 0..max {
+        if current + v >= *best {
+            break;
+        } // Prune
+        vals[idx] = v;
+        search(matrix, idx + 1, vals, best, max);
+    }
+}
+
+fn part2(puzzles: &[Puzzle]) -> usize {
+    // Heavily inspired by https://gist.github.com/icub3d/16eea2a8b4a94d193a148fef908779a9
+    let pb = ProgressBar::new(puzzles.len() as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")
+            .unwrap()
+            .progress_chars("=>-"),
+    );
+
+    let result: usize = puzzles
+        .iter()
+        .par_bridge()
+        .map(|puzzle| {
+            let matrix = Matrix::from_puzzle(puzzle);
+
+            // Much better bound: sum of joltages instead of max
+            let max = puzzle.joltages.iter().sum::<usize>() / matrix.independent.len().max(1);
+
+            let mut best = usize::MAX;
+            let mut vals = vec![0; matrix.independent.len()];
+            search(&matrix, 0, &mut vals, &mut best, max);
+            pb.inc(1);
+            best
+        })
+        .sum();
+
+    pb.finish_with_message("Complete");
+    result
 }
 
 #[cfg(test)]
@@ -150,8 +306,14 @@ mod tests {
     }
 
     #[test]
-    fn test_example() {
+    fn test_example_part1() {
         let puzzles = get_puzzles();
-        assert_eq!(part1(&puzzles), 7);
+        assert_eq!(part1(&puzzles), 7); // 2 + 3 + 2 = 7
+    }
+
+    #[test]
+    fn test_example_part2() {
+        let puzzles = get_puzzles();
+        assert_eq!(part2(&puzzles), 33); // 10 + 12 + 11 = 33
     }
 }

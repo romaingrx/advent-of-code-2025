@@ -9,6 +9,7 @@ mod day_08;
 mod day_09;
 mod day_10;
 mod day_11;
+mod day_12;
 use std::env;
 
 fn main() {
@@ -45,6 +46,7 @@ fn main() {
         "9" => day_09::run(part, is_test),
         "10" => day_10::run(part, is_test),
         "11" => day_11::run(part, is_test),
+        "12" => day_12::run(part, is_test),
         _ => println!("Day {} not implemented yet", day),
     }
 }

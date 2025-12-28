@@ -78,7 +78,7 @@ pub fn run(part: u8, is_test: bool) {
     let input = fs::read_to_string(format!("src/day_11/{}", input_file))
         .expect("Failed to read input file");
 
-    let graph: Graph = Graph::from(input);
+    let graph = Graph::from(input);
 
     let result = match part {
         1 => part1(&graph),
@@ -92,12 +92,12 @@ pub fn run(part: u8, is_test: bool) {
     println!("Day 11 Part {}: {}", part, result);
 }
 
-fn part1(graph: &Graph) -> u64 {
+fn count_paths(graph: &Graph, from: &str, to: &str) -> u64 {
     let ordered = graph.topological_sort();
     let mut paths: HashMap<String, u64> =
         HashMap::from_iter(graph.all_nodes().iter().map(|node| (node.clone(), 0)));
 
-    *paths.get_mut("out").unwrap() = 1;
+    *paths.get_mut(to).unwrap() = 1;
     for node in ordered.iter().rev() {
         let increment: u64 = if let Some(children) = graph.entries.get(node) {
             children.iter().filter_map(|child| paths.get(child)).sum()
@@ -109,11 +109,25 @@ fn part1(graph: &Graph) -> u64 {
         }
     }
 
-    *paths.get("you").unwrap()
+    paths.get(from).copied().unwrap_or(0)
 }
 
-fn part2(_graph: &Graph) -> u64 {
-    todo!();
+fn part1(graph: &Graph) -> u64 {
+    count_paths(graph, "you", "out")
+}
+
+fn part2(graph: &Graph) -> u64 {
+    // Paths visiting dac before fft
+    let dac_then_fft = count_paths(graph, "svr", "dac")
+        * count_paths(graph, "dac", "fft")
+        * count_paths(graph, "fft", "out");
+
+    // Paths visiting fft before dac
+    let fft_then_dac = count_paths(graph, "svr", "fft")
+        * count_paths(graph, "fft", "dac")
+        * count_paths(graph, "dac", "out");
+
+    dac_then_fft + fft_then_dac
 }
 
 #[cfg(test)]
@@ -134,5 +148,25 @@ mod tests {
     fn test_example() {
         let graph = Graph::from(TEST_INPUT.to_string());
         assert_eq!(part1(&graph), 5);
+    }
+
+    const TEST_INPUT_PART2: &str = r##"svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out"##;
+
+    #[test]
+    fn test_example_part2() {
+        let graph = Graph::from(TEST_INPUT_PART2.to_string());
+        assert_eq!(part2(&graph), 2);
     }
 }
